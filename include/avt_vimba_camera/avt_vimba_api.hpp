@@ -56,6 +56,19 @@ public:
   {
   }
 
+  void stop()
+  {
+    VmbErrorType err = vs.Shutdown();
+    if (VmbErrorSuccess == err)
+    {
+      RCLCPP_INFO_STREAM(logger_, "[Vimba System]: AVT Vimba System shut down successfully");
+    }
+    else
+    {
+      RCLCPP_ERROR_STREAM(logger_, "[Vimba System]: Could not shut down Vimba system: " << errorCodeToMessage(err));
+    }  
+  }
+
   void start()
   {
     VmbErrorType err = vs.Startup();
