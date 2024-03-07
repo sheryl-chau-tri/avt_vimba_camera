@@ -36,13 +36,17 @@
 #include "avt_vimba_camera/avt_vimba_camera.hpp"
 #include "avt_vimba_camera/avt_vimba_api.hpp"
 
+#include <avt_vimba_camera_msgs/srv/detail/load_settings__struct.hpp>
+#include <avt_vimba_camera_msgs/srv/detail/save_settings__struct.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <camera_info_manager/camera_info_manager.hpp>
 #include <image_transport/image_transport.hpp>
+#include <std_srvs/srv/trigger.hpp>
+#include <avt_vimba_camera_msgs/srv/load_settings.hpp>
+#include <avt_vimba_camera_msgs/srv/save_settings.hpp>
 
-#include <string>
 
 namespace avt_vimba_camera
 {
@@ -66,9 +70,28 @@ private:
 
   image_transport::CameraPublisher camera_info_pub_;
   std::shared_ptr<camera_info_manager::CameraInfoManager> info_man_;
+  
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr start_srv_;
+  rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr stop_srv_;
+
+  rclcpp::Service<avt_vimba_camera_msgs::srv::LoadSettings>::SharedPtr load_srv_;
+  rclcpp::Service<avt_vimba_camera_msgs::srv::SaveSettings>::SharedPtr save_srv_;
+
 
   void loadParams();
   void frameCallback(const FramePtr& vimba_frame_ptr);
+  void startSrvCallback(const std::shared_ptr<rmw_request_id_t> request_header,
+                        const std_srvs::srv::Trigger::Request::SharedPtr req,
+                        std_srvs::srv::Trigger::Response::SharedPtr res);
+  void stopSrvCallback(const std::shared_ptr<rmw_request_id_t> request_header,
+                       const std_srvs::srv::Trigger::Request::SharedPtr req,
+                       std_srvs::srv::Trigger::Response::SharedPtr res);
+  void loadSrvCallback(const std::shared_ptr<rmw_request_id_t> request_header,
+                       const avt_vimba_camera_msgs::srv::LoadSettings::Request::SharedPtr req,
+                       avt_vimba_camera_msgs::srv::LoadSettings::Response::SharedPtr res);
+  void saveSrvCallback(const std::shared_ptr<rmw_request_id_t> request_header,
+                       const avt_vimba_camera_msgs::srv::SaveSettings::Request::SharedPtr req,
+                       avt_vimba_camera_msgs::srv::SaveSettings::Response::SharedPtr res);
 };
 }  // namespace avt_vimba_camera
 #endif

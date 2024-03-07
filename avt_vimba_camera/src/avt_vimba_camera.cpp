@@ -31,13 +31,13 @@
 /// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "avt_vimba_camera/avt_vimba_camera.hpp"
+#include "VimbaC/Include/VimbaC.h"
 #include "avt_vimba_camera/avt_vimba_api.hpp"
 
 #include <rclcpp/rclcpp.hpp>
 #include <diagnostic_msgs/msg/diagnostic_status.hpp>
 
 #include <signal.h>
-#include <thread>
 
 namespace avt_vimba_camera
 {
@@ -51,6 +51,7 @@ AvtVimbaCamera::AvtVimbaCamera(rclcpp::Node* node)
   streaming_ = false;  // capturing frames
   on_init_ = true;     // on initialization phase
   on_init_config_ = false;
+  force_stopped_ = false;
   camera_state_ = OPENING;
 
   // Features that affect the camera_info parameters
@@ -282,6 +283,11 @@ void AvtVimbaCamera::frameCallback(const FramePtr vimba_frame_ptr)
   // Call the callback implemented by other classes
   std::thread thread_callback = std::thread(userFrameCallback, vimba_frame_ptr);
   thread_callback.join();
+}
+
+CameraState AvtVimbaCamera::getCameraState() const
+{
+  return camera_state_;
 }
 
 double AvtVimbaCamera::getTimestamp()
@@ -784,6 +790,7 @@ bool AvtVimbaCamera::createParamFromFeature(const FeaturePtr feature, std::strin
         feature->GetValue(initial_value);
         feature->GetRange(minimum_value, maximum_value);
         feature->GetIncrement(step);
+        initial_value = std::max(minimum_value, std::min(initial_value, maximum_value));
 
         rcl_interfaces::msg::IntegerRange int_range;
         int_range.from_value = minimum_value;
@@ -803,13 +810,17 @@ bool AvtVimbaCamera::createParamFromFeature(const FeaturePtr feature, std::strin
         feature->GetValue(initial_value);
         feature->GetRange(minimum_value, maximum_value);
         feature->GetIncrement(step);
+        
+        initial_value = std::max(maximum_value, std::min(initial_value, minimum_value));
 
         rcl_interfaces::msg::FloatingPointRange float_range;
         float_range.from_value = minimum_value;
         float_range.to_value = maximum_value;
-        float_range.step = step;
-        descriptor.floating_point_range.push_back(float_range);
+        // TODO: step is not working when feature is set to Continuous
+        // float_range.step = step;
 
+        descriptor.floating_point_range.push_back(float_range);
+        
         nh_->declare_parameter<double>(PARAM_NAMESPACE + feature_name, initial_value, descriptor);
         break;
       }
@@ -871,7 +882,6 @@ AvtVimbaCamera::parameterCallback(const std::vector<rclcpp::Parameter>& paramete
     {
       if (writable_features_[feature_name])
       {
-        std::unique_lock<std::mutex> lock(config_mutex_);
 
         // Stop imaging since parameter changes can affect the image frames being received
         if (streaming_ && !on_init_config_)
@@ -880,6 +890,7 @@ AvtVimbaCamera::parameterCallback(const std::vector<rclcpp::Parameter>& paramete
           std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
 
+        std::unique_lock<std::mutex> lock(config_mutex_);
         rclcpp::ParameterType param_type = param.get_type();
 
         switch (param_type)
@@ -914,7 +925,7 @@ AvtVimbaCamera::parameterCallback(const std::vector<rclcpp::Parameter>& paramete
           updateCameraInfo();
         }
 
-        if (!on_init_config_)
+        if (!(on_init_config_ || force_stopped_))
         {
           startImaging();
         }
@@ -1000,4 +1011,45 @@ void AvtVimbaCamera::getCurrentState(diagnostic_updater::DiagnosticStatusWrapper
       break;
   }
 }
+
+bool AvtVimbaCamera::loadCameraSettings(const std::string& filename)
+{
+  stopImaging();
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+  vimba_camera_ptr_->LoadSaveSettingsSetup(VmbFeaturePersistNoLUT, 5, 4);
+  auto err = vimba_camera_ptr_->LoadCameraSettings(filename);
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  startImaging();
+
+  if (err != VmbErrorSuccess)
+  {
+    RCLCPP_ERROR(nh_->get_logger(), "Failed to load camera settings from %s", filename.c_str());
+    return false;
+  }
+  RCLCPP_INFO(nh_->get_logger(), "Loaded camera settings from %s", filename.c_str());
+  return true;
+}
+
+bool AvtVimbaCamera::saveCameraSettings(const std::string& filename)
+{
+  stopImaging();
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+  vimba_camera_ptr_->LoadSaveSettingsSetup(VmbFeaturePersistNoLUT, 5, 4);
+  auto err = vimba_camera_ptr_->SaveCameraSettings(filename);
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  startImaging();
+
+  if (err != VmbErrorSuccess)
+  {
+    RCLCPP_ERROR(nh_->get_logger(), "Failed to save camera settings to %s", filename.c_str());
+    return false;
+  }
+  RCLCPP_INFO(nh_->get_logger(), "Saved camera settings to %s", filename.c_str());
+  return true;
+}
+
 }  // namespace avt_vimba_camera

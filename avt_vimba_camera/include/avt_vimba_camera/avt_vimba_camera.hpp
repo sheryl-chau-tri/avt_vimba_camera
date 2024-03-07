@@ -80,6 +80,9 @@ public:
   void startImaging();
   void stopImaging();
 
+  bool loadCameraSettings(const std::string& filename);
+  bool saveCameraSettings(const std::string& filename);
+
   // Utility functions
   double getTimestampRealTime(VmbUint64_t timestamp_ticks);
   bool isOpened()
@@ -88,6 +91,7 @@ public:
   }
 
   // Getters
+  CameraState getCameraState() const;
   double getTimestamp();
   double getDeviceTemp();
   int getImageWidth();
@@ -102,6 +106,10 @@ public:
   void setCallback(frameCallbackFunc callback)
   {
     userFrameCallback = callback;
+  }
+  void setForceStop(bool force_stop)
+  {
+    force_stopped_ = force_stop;
   }
 
 private:
@@ -124,6 +132,7 @@ private:
   CameraState camera_state_;
   bool opened_;
   bool streaming_;
+  bool force_stopped_;
   bool on_init_;
   bool on_init_config_;
   std::string guid_;

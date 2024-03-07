@@ -93,7 +93,7 @@ elseif("${ARCH}" STREQUAL armv8)
   )
 endif()
 
-install(FILES README.md
+install(FILES ../README.md
   DESTINATION share/${PROJECT_NAME}/
 )
 
