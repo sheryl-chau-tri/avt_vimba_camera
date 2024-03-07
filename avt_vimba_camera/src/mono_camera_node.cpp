@@ -54,6 +54,9 @@ MonoCameraNode::MonoCameraNode() : Node("camera"), api_(this->get_logger()), cam
   load_srv_ = create_service<avt_vimba_camera_msgs::srv::LoadSettings>("~/load_settings", std::bind(&MonoCameraNode::loadSrvCallback, this, _1, _2, _3));
   save_srv_ = create_service<avt_vimba_camera_msgs::srv::SaveSettings>("~/save_settings", std::bind(&MonoCameraNode::saveSrvCallback, this, _1, _2, _3));
 
+  ptp_data_timer_ = create_wall_timer(std::chrono::seconds(1), std::bind(&avt_vimba_camera::MonoCameraNode::ptpOffsetCallback, this));
+  ptp_offset_pub_ = create_publisher<std_msgs::msg::Int64>("ptp_offset", 10);
+
   loadParams();
 }
 
@@ -78,6 +81,15 @@ void MonoCameraNode::loadParams()
   RCLCPP_INFO(this->get_logger(), "Parameters loaded");
 }
 
+void MonoCameraNode::ptpOffsetCallback() {
+  double ptp_offset = cam_.getPtpOffset();
+  if (ptp_offset < 9999999.9)
+  {
+    std_msgs::msg::Int64 offset_msg;
+    offset_msg.data = ptp_offset;
+    ptp_offset_pub_->publish(offset_msg);
+  }
+}
 void MonoCameraNode::start()
 {
   // Start Vimba & list all available cameras

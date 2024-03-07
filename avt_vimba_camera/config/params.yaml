@@ -6,7 +6,7 @@
 /**:
   ros__parameters:
     feature/AcquisitionFrameCount: 1
-    feature/AcquisitionFrameRateAbs: 10.0
+    # feature/AcquisitionFrameRateAbs: 10.0
     # feature/AcquisitionMode: Continuous
     # feature/ActionDeviceKey: 0
     # feature/ActionGroupKey: 0
@@ -84,9 +84,10 @@
     # feature/MulticastIPAddress: 823132143
     # feature/OffsetX: 0
     # feature/OffsetY: 0
-    # feature/PixelFormat: BayerRG8
+    feature/PixelFormat: BayerRG8
     # feature/PtpAcquisitionGateTime: 0
-    # feature/PtpMode: 'Off'
+    feature/PtpEnable: true
+    feature/PtpOperationMode: 'Slave'
     # feature/RecorderPreEventCount: 0
     # feature/ReverseX: false
     # feature/ReverseY: false
@@ -110,7 +111,7 @@
     # feature/TriggerMode: 'On'
     # feature/TriggerOverlap: 'Off'
     # feature/TriggerSelector: FrameStart
-    feature/TriggerSource: FixedRate
+    # feature/TriggerSource: FixedRate
     # feature/UserSetDefaultSelector: Default
     # feature/UserSetSelector: Default
     # feature/Width: 2064

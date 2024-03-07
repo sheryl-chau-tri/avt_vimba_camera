@@ -93,6 +93,7 @@ public:
   // Getters
   CameraState getCameraState() const;
   double getTimestamp();
+  double getPtpOffset();
   double getDeviceTemp();
   int getImageWidth();
   int getImageHeight();

@@ -303,6 +303,18 @@ double AvtVimbaCamera::getTimestamp()
   return timestamp;
 }
 
+double AvtVimbaCamera::getPtpOffset()
+{
+  double offset = 9999999.9;
+  if (runCommand("PtpDataSetLatch"))
+  {
+    VmbInt64_t offset;
+    getFeatureValue("PtpOffset", offset);
+    offset = static_cast<double>(offset);
+  }
+  return offset;
+}
+
 double AvtVimbaCamera::getDeviceTemp()
 {
   double temp = -1.0;
