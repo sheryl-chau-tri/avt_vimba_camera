@@ -43,8 +43,8 @@ namespace avt_vimba_camera
 {
 static volatile int keepRunning = 1;
 
-AvtVimbaCamera::AvtVimbaCamera(rclcpp::Node::SharedPtr owner_node)
-  : nh_(owner_node), api_(owner_node->get_logger()), updater_(owner_node)
+AvtVimbaCamera::AvtVimbaCamera(rclcpp::Node* node)
+  : nh_(node), api_(node->get_logger()), updater_(node)
 {
   clock_ = rclcpp::Clock(RCL_ROS_TIME);
   opened_ = false;     // camera connected to the api
@@ -63,7 +63,7 @@ AvtVimbaCamera::AvtVimbaCamera(rclcpp::Node::SharedPtr owner_node)
   cam_info_features_.emplace("DecimationVertical");
 
   updater_.setHardwareID("unknown");
-  updater_.add(owner_node->get_name(), this, &AvtVimbaCamera::getCurrentState);
+  updater_.add(node->get_name(), this, &AvtVimbaCamera::getCurrentState);
 }
 
 void AvtVimbaCamera::start(const std::string& ip_str, const std::string& guid_str, const std::string& frame_id,
@@ -74,7 +74,7 @@ void AvtVimbaCamera::start(const std::string& ip_str, const std::string& guid_st
 
   frame_id_ = frame_id;
   info_man_ = std::shared_ptr<camera_info_manager::CameraInfoManager>(
-      new camera_info_manager::CameraInfoManager(nh_.get(), frame_id, camera_info_url));
+      new camera_info_manager::CameraInfoManager(nh_, frame_id, camera_info_url));
   updater_.broadcast(0, "Starting device with IP:" + ip_str + " or GUID:" + guid_str);
 
   // Determine which camera to use. Try IP first
