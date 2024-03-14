@@ -29,21 +29,21 @@ include_directories(
 function(add_dependencies_and_linkings arg)
   if("${ARCH}" STREQUAL x86_64)
     target_link_libraries(${arg}
-      ${CMAKE_CURRENT_SOURCE_DIR}/lib/64bit/libVimbaC.so
-      ${CMAKE_CURRENT_SOURCE_DIR}/lib/64bit/libVimbaCPP.so
+      ${CMAKE_CURRENT_SOURCE_DIR}/lib/64bit/libVmbC.so
+      ${CMAKE_CURRENT_SOURCE_DIR}/lib/64bit/libVmbCPP.so
     )
   elseif("${ARCH}" STREQUAL armv7)
     target_link_libraries(${arg}
-      ${CMAKE_CURRENT_SOURCE_DIR}/lib/arm_32bit/libVimbaC.so
-      ${CMAKE_CURRENT_SOURCE_DIR}/lib/arm_32bit/libVimbaCPP.so
+      ${CMAKE_CURRENT_SOURCE_DIR}/lib/arm_32bit/libVmbC.so
+      ${CMAKE_CURRENT_SOURCE_DIR}/lib/arm_32bit/libVmbCPP.so
     )
   elseif("${ARCH}" STREQUAL armv8)
     target_link_libraries(${arg}
-      ${CMAKE_CURRENT_SOURCE_DIR}/lib/arm_64bit/libVimbaC.so
-      ${CMAKE_CURRENT_SOURCE_DIR}/lib/arm_64bit/libVimbaCPP.so
+      ${CMAKE_CURRENT_SOURCE_DIR}/lib/arm_64bit/libVmbC.so
+      ${CMAKE_CURRENT_SOURCE_DIR}/lib/arm_64bit/libVmbCPP.so
     )
   else()
-    message(FATAL_ERROR "[libvimba]: Architecture ${ARCH} not suported. Exiting...")
+    message(FATAL_ERROR "[libvmb]: Architecture ${ARCH} not suported. Exiting...")
   endif()
 endfunction(add_dependencies_and_linkings)
 
@@ -75,20 +75,20 @@ ament_auto_add_executable(trigger_exec
 
 if("${ARCH}" STREQUAL x86_64)
   install(FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/64bit/libVimbaC.so
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/64bit/libVimbaCPP.so
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/64bit/libVmbC.so
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/64bit/libVmbCPP.so
     DESTINATION lib
   )
 elseif("${ARCH}" STREQUAL armv7)
   install(FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/arm_32bit/libVimbaC.so
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/arm_32bit/libVimbaCPP.so
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/arm_32bit/libVmbC.so
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/arm_32bit/libVmbCPP.so
     DESTINATION lib
   )
 elseif("${ARCH}" STREQUAL armv8)
   install(FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/arm_64bit/libVimbaC.so
-    ${CMAKE_CURRENT_SOURCE_DIR}/lib/arm_64bit/libVimbaCPP.so
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/arm_64bit/libVmbC.so
+    ${CMAKE_CURRENT_SOURCE_DIR}/lib/arm_64bit/libVmbCPP.so
     DESTINATION lib
   )
 endif()

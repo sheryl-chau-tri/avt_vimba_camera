@@ -33,7 +33,7 @@
 #ifndef AVT_VIMBA_API_H
 #define AVT_VIMBA_API_H
 
-#include <VimbaCPP/Include/VimbaCPP.h>
+#include <VmbCPP/Include/VmbCPP.h>
 
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/image.hpp>
@@ -43,16 +43,16 @@
 #include <string>
 #include <map>
 
-using AVT::VmbAPI::CameraPtr;
-using AVT::VmbAPI::FramePtr;
-using AVT::VmbAPI::VimbaSystem;
+using VmbCPP::CameraPtr;
+using VmbCPP::FramePtr;
+using VmbCPP::VmbSystem;
 
 namespace avt_vimba_camera
 {
 class AvtVimbaApi
 {
 public:
-  AvtVimbaApi(const rclcpp::Logger& logger) : vs(VimbaSystem::GetInstance()), logger_(logger)
+  AvtVimbaApi(const rclcpp::Logger& logger) : vs(VmbSystem::GetInstance()), logger_(logger)
   {
   }
 
@@ -120,17 +120,14 @@ public:
     return "Unsupported error code passed.";
   }
 
-  std::string interfaceToString(VmbInterfaceType interfaceType)
+  std::string interfaceToString(VmbTransportLayerType interfaceType)
   {
     switch (interfaceType)
     {
-      case VmbInterfaceFirewire:
-        return "FireWire";
-        break;
-      case VmbInterfaceEthernet:
+      case VmbTransportLayerTypeGEV:
         return "GigE";
         break;
-      case VmbInterfaceUsb:
+      case VmbTransportLayerTypeUVC:
         return "USB";
         break;
       default:
@@ -144,12 +141,10 @@ public:
       return "Read and write access";
     else if (modeType & VmbAccessModeRead)
       return "Only read access";
-    else if (modeType & VmbAccessModeConfig)
-      return "Device configuration access";
-    else if (modeType & VmbAccessModeLite)
-      return "Device read/write access without feature access (only addresses)";
     else if (modeType & VmbAccessModeNone)
       return "No access";
+    else if (modeType & VmbAccessModeExclusive)
+      return "Exclusive access";
     else
       return "Undefined access";
   }
@@ -162,7 +157,7 @@ public:
     vimba_frame_ptr->GetWidth(width);
     vimba_frame_ptr->GetHeight(height);
     vimba_frame_ptr->GetPixelFormat(pixel_format);
-    vimba_frame_ptr->GetImageSize(nSize);
+    vimba_frame_ptr->GetBufferSize(nSize); //different than image size
 
     VmbUint32_t step = nSize / height;
 
@@ -253,7 +248,7 @@ public:
   }
 
 private:
-  VimbaSystem& vs;
+  VmbSystem& vs;
   rclcpp::Logger logger_;
 
   void listAvailableCameras()
@@ -271,7 +266,7 @@ private:
           std::string strModelname;
           std::string strSerialNumber;
           std::string strInterfaceID;
-          VmbInterfaceType interfaceType;
+          VmbTransportLayerType interfaceType;
           VmbAccessModeType accessType;
 
           VmbErrorType err = camera->GetID(strID);

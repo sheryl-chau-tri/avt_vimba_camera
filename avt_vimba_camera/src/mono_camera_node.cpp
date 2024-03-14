@@ -54,6 +54,9 @@ MonoCameraNode::MonoCameraNode() : Node("camera"), api_(this->get_logger()), cam
   load_srv_ = create_service<avt_vimba_camera_msgs::srv::LoadSettings>("~/load_settings", std::bind(&MonoCameraNode::loadSrvCallback, this, _1, _2, _3));
   save_srv_ = create_service<avt_vimba_camera_msgs::srv::SaveSettings>("~/save_settings", std::bind(&MonoCameraNode::saveSrvCallback, this, _1, _2, _3));
 
+  ptp_data_timer_ = create_wall_timer(std::chrono::seconds(10), std::bind(&avt_vimba_camera::MonoCameraNode::ptpOffsetCallback, this));
+  ptp_offset_pub_ = create_publisher<std_msgs::msg::Int64>("~/ptp_offset", 10);
+  
   loadParams();
 }
 
@@ -86,6 +89,18 @@ void MonoCameraNode::start()
   // Start camera
   cam_.start(ip_, guid_, frame_id_, camera_info_url_);
   cam_.startImaging();
+}
+
+void MonoCameraNode::ptpOffsetCallback() {
+  int ptp_offset = cam_.getPtpOffset();
+  // VmbInt64_t ptp_offset;
+  // cam_.getFeatureValueInt(cam_, "PtpOffsetFromMaster", ptp_offset);
+  if (ptp_offset < 9999999)
+  {
+    std_msgs::msg::Int64 offset_msg;
+    offset_msg.data = ptp_offset;
+    ptp_offset_pub_->publish(offset_msg);
+  }
 }
 
 void MonoCameraNode::frameCallback(const FramePtr& vimba_frame_ptr)

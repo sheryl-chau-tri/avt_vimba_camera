@@ -84,9 +84,10 @@
     # feature/MulticastIPAddress: 823132143
     # feature/OffsetX: 0
     # feature/OffsetY: 0
-    # feature/PixelFormat: BayerRG8
+    feature/PixelFormat: BayerRG8
     # feature/PtpAcquisitionGateTime: 0
-    # feature/PtpMode: 'Off'
+    feature/PtpEnable: true
+    feature/PtpMode: 'Slave'
     # feature/RecorderPreEventCount: 0
     # feature/ReverseX: false
     # feature/ReverseY: false

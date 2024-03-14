@@ -31,7 +31,8 @@
 /// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "avt_vimba_camera/avt_vimba_camera.hpp"
-#include "VimbaC/Include/VimbaC.h"
+#include "VmbC/Include/VmbC.h"
+#include "VmbCPP/Include/VmbCPP.h"
 #include "avt_vimba_camera/avt_vimba_api.hpp"
 
 #include <rclcpp/rclcpp.hpp>
@@ -129,9 +130,9 @@ void AvtVimbaCamera::start(const std::string& ip_str, const std::string& guid_st
 
   // From the SynchronousGrab API example:
   // TODO Set the GeV packet size to the highest possible value
-  VmbInterfaceType cam_int_type;
+  VmbTransportLayerType cam_int_type;
   vimba_camera_ptr_->GetInterfaceType(cam_int_type);
-  if (cam_int_type == VmbInterfaceEthernet)
+  if (cam_int_type == VmbTransportLayerTypeGEV)
   {
     runCommand("GVSPAdjustPacketSize");
   }
@@ -139,9 +140,8 @@ void AvtVimbaCamera::start(const std::string& ip_str, const std::string& guid_st
   std::string trigger_source;
   getFeatureValue("TriggerSource", trigger_source);
 
-  SP_SET(frame_obs_ptr_,
-          new FrameObserver(vimba_camera_ptr_,
-                            std::bind(&avt_vimba_camera::AvtVimbaCamera::frameCallback, this, std::placeholders::_1)));
+  frame_obs_ptr_ = std::make_shared<FrameObserver>(vimba_camera_ptr_,
+                            std::bind(&avt_vimba_camera::AvtVimbaCamera::frameCallback, this, std::placeholders::_1));
   RCLCPP_INFO(nh_->get_logger(), "Ready to receive frames triggered by %s", trigger_source.c_str());
   camera_state_ = IDLE;
 
@@ -163,21 +163,21 @@ void AvtVimbaCamera::startImaging()
   if (!streaming_)
   {
     // Start streaming
-    VmbErrorType err = vimba_camera_ptr_->StartContinuousImageAcquisition(3, IFrameObserverPtr(frame_obs_ptr_));
-    if (err == VmbErrorSuccess)
-    {
-      diagnostic_msg_ = "Starting continuous image acquisition";
-      RCLCPP_INFO_STREAM(nh_->get_logger(), "Starting continuous image acquisition ...");
-      streaming_ = true;
-      camera_state_ = OK;
-    }
-    else
-    {
-      diagnostic_msg_ = "Could not start continuous image acquisition. Error: " + api_.errorCodeToMessage(err);
-      RCLCPP_ERROR_STREAM(nh_->get_logger(), "Could not start continuous image acquisition. "
-                                                 << "\n Error: " << api_.errorCodeToMessage(err));
-      camera_state_ = ERROR;
-    }
+    // VmbErrorType err = vimba_camera_ptr_->StartContinuousImageAcquisition(3, IFrameObserverPtr(frame_obs_ptr_));
+    // if (err == VmbErrorSuccess)
+    // {
+    //   diagnostic_msg_ = "Starting continuous image acquisition";
+    //   RCLCPP_INFO_STREAM(nh_->get_logger(), "Starting continuous image acquisition ...");
+    //   streaming_ = true;
+    //   camera_state_ = OK;
+    // }
+    // else
+    // {
+    //   diagnostic_msg_ = "Could not start continuous image acquisition. Error: " + api_.errorCodeToMessage(err);
+    //   RCLCPP_ERROR_STREAM(nh_->get_logger(), "Could not start continuous image acquisition. "
+    //                                              << "\n Error: " << api_.errorCodeToMessage(err));
+    //   camera_state_ = ERROR;
+    // }
   }
   else
   {
@@ -221,7 +221,7 @@ CameraPtr AvtVimbaCamera::openCamera(const std::string& id_str)
   //            or a plain serial number: "1234567890".
 
   CameraPtr camera;
-  VimbaSystem& vimba_system(VimbaSystem::GetInstance());
+  VmbSystem& vimba_system(VmbSystem::GetInstance());
 
   // get camera
   VmbErrorType err = vimba_system.GetCameraByID(id_str.c_str(), camera);
@@ -288,6 +288,22 @@ void AvtVimbaCamera::frameCallback(const FramePtr vimba_frame_ptr)
 CameraState AvtVimbaCamera::getCameraState() const
 {
   return camera_state_;
+}
+
+int AvtVimbaCamera::getPtpOffset()
+{
+  int64_t offset = 9999999;
+  uint64_t ptp_clock_id = 0;
+
+  if (runCommand("PtpDataSetLatch"))
+  {
+    getFeatureValue("PtpGrandmasterClockID", ptp_clock_id);
+    getFeatureValue("PtpOffsetFromMaster", offset);
+    RCLCPP_INFO_STREAM(nh_->get_logger(), "Clock ID: "<< ptp_clock_id << ", Master offset: " << offset);
+
+  }
+  
+  return offset;
 }
 
 double AvtVimbaCamera::getTimestamp()
@@ -1017,8 +1033,13 @@ bool AvtVimbaCamera::loadCameraSettings(const std::string& filename)
   stopImaging();
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-  vimba_camera_ptr_->LoadSaveSettingsSetup(VmbFeaturePersistNoLUT, 5, 4);
-  auto err = vimba_camera_ptr_->LoadCameraSettings(filename);
+  // vimba_camera_ptr_->LoadSaveSettingsSetup(VmbFeaturePersistNoLUT, 5, 4);
+  VmbFeaturePersistSettings_t *pSettings;
+  pSettings->persistType = VmbFeaturePersistNoLUT;
+  pSettings->maxIterations = 5;
+  pSettings->loggingLevel = 4;
+
+  auto err = vimba_camera_ptr_->LoadSettings(filename.c_str(), pSettings);
 
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
   startImaging();
@@ -1037,8 +1058,12 @@ bool AvtVimbaCamera::saveCameraSettings(const std::string& filename)
   stopImaging();
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-  vimba_camera_ptr_->LoadSaveSettingsSetup(VmbFeaturePersistNoLUT, 5, 4);
-  auto err = vimba_camera_ptr_->SaveCameraSettings(filename);
+  // vimba_camera_ptr_->LoadSaveSettingsSetup(VmbFeaturePersistNoLUT, 5, 4);
+  VmbFeaturePersistSettings_t *pSettings;
+  pSettings->persistType = VmbFeaturePersistNoLUT;
+  pSettings->maxIterations = 5;
+  pSettings->loggingLevel = 4;
+  auto err = vimba_camera_ptr_->SaveSettings(filename.c_str(), pSettings);
 
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
   startImaging();

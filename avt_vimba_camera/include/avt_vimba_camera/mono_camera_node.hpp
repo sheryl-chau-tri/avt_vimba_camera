@@ -44,6 +44,7 @@
 #include <camera_info_manager/camera_info_manager.hpp>
 #include <image_transport/image_transport.hpp>
 #include <std_srvs/srv/trigger.hpp>
+#include <std_msgs/msg/int64.hpp>
 #include <avt_vimba_camera_msgs/srv/load_settings.hpp>
 #include <avt_vimba_camera_msgs/srv/save_settings.hpp>
 
@@ -77,8 +78,11 @@ private:
   rclcpp::Service<avt_vimba_camera_msgs::srv::LoadSettings>::SharedPtr load_srv_;
   rclcpp::Service<avt_vimba_camera_msgs::srv::SaveSettings>::SharedPtr save_srv_;
 
+  rclcpp::TimerBase::SharedPtr ptp_data_timer_;
+  std::shared_ptr<rclcpp::Publisher<std_msgs::msg::Int64>> ptp_offset_pub_;
 
   void loadParams();
+  void ptpOffsetCallback();
   void frameCallback(const FramePtr& vimba_frame_ptr);
   void startSrvCallback(const std::shared_ptr<rmw_request_id_t> request_header,
                         const std_srvs::srv::Trigger::Request::SharedPtr req,
