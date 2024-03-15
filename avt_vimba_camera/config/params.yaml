@@ -87,7 +87,7 @@
     feature/PixelFormat: BayerRG8
     # feature/PtpAcquisitionGateTime: 0
     feature/PtpEnable: true
-    feature/PtpMode: 'Slave'
+    feature/PtpOperationMode: 'Slave'
     # feature/RecorderPreEventCount: 0
     # feature/ReverseX: false
     # feature/ReverseY: false
