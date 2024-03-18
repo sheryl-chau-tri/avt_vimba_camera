@@ -120,7 +120,7 @@ private:
   AvtVimbaApi api_;
 
   // IFrame Observer
-  std::shared_ptr<FrameObserver> frame_obs_ptr_;
+  SharedPointer<FrameObserver> frame_obs_ptr_;
   // The currently streaming camera
   CameraPtr vimba_camera_ptr_;
   // Current frame

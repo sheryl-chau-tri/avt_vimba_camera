@@ -140,9 +140,10 @@ void AvtVimbaCamera::start(const std::string& ip_str, const std::string& guid_st
   std::string trigger_source;
   getFeatureValue("TriggerSource", trigger_source);
 
-  frame_obs_ptr_ = std::make_shared<FrameObserver>(vimba_camera_ptr_,
-                            std::bind(&avt_vimba_camera::AvtVimbaCamera::frameCallback, this, std::placeholders::_1));
-  RCLCPP_INFO(nh_->get_logger(), "Ready to receive frames triggered by %s", trigger_source.c_str());
+  SP_SET(frame_obs_ptr_,
+          new FrameObserver(vimba_camera_ptr_,
+                            std::bind(&avt_vimba_camera::AvtVimbaCamera::frameCallback, this, std::placeholders::_1)));
+  RCLCPP_INFO(nh_->get_logger(), "Ready to receive frames triggered by %s", trigger_source.c_str());  RCLCPP_INFO(nh_->get_logger(), "Ready to receive frames triggered by %s", trigger_source.c_str());
   camera_state_ = IDLE;
 
   updater_.force_update();
@@ -163,21 +164,21 @@ void AvtVimbaCamera::startImaging()
   if (!streaming_)
   {
     // Start streaming
-    // VmbErrorType err = vimba_camera_ptr_->StartContinuousImageAcquisition(3, IFrameObserverPtr(frame_obs_ptr_));
-    // if (err == VmbErrorSuccess)
-    // {
-    //   diagnostic_msg_ = "Starting continuous image acquisition";
-    //   RCLCPP_INFO_STREAM(nh_->get_logger(), "Starting continuous image acquisition ...");
-    //   streaming_ = true;
-    //   camera_state_ = OK;
-    // }
-    // else
-    // {
-    //   diagnostic_msg_ = "Could not start continuous image acquisition. Error: " + api_.errorCodeToMessage(err);
-    //   RCLCPP_ERROR_STREAM(nh_->get_logger(), "Could not start continuous image acquisition. "
-    //                                              << "\n Error: " << api_.errorCodeToMessage(err));
-    //   camera_state_ = ERROR;
-    // }
+    VmbErrorType err = vimba_camera_ptr_->StartContinuousImageAcquisition(3, IFrameObserverPtr(frame_obs_ptr_));
+    if (err == VmbErrorSuccess)
+    {
+      diagnostic_msg_ = "Starting continuous image acquisition";
+      RCLCPP_INFO_STREAM(nh_->get_logger(), "Starting continuous image acquisition ...");
+      streaming_ = true;
+      camera_state_ = OK;
+    }
+    else
+    {
+      diagnostic_msg_ = "Could not start continuous image acquisition. Error: " + api_.errorCodeToMessage(err);
+      RCLCPP_ERROR_STREAM(nh_->get_logger(), "Could not start continuous image acquisition. "
+                                                 << "\n Error: " << api_.errorCodeToMessage(err));
+      camera_state_ = ERROR;
+    }
   }
   else
   {
