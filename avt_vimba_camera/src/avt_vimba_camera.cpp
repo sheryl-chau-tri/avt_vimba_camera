@@ -307,15 +307,14 @@ int AvtVimbaCamera::getPtpOffset()
   return offset;
 }
 
-double AvtVimbaCamera::getTimestamp()
+u_int64_t AvtVimbaCamera::getTimestamp()
 {
-  double timestamp = -1.0;
-  if (runCommand("GevTimestampControlLatch"))
+  u_int64_t timestamp = 0;
+  if (runCommand("TimestampLatch"))
   {
-    VmbInt64_t freq, ticks;
-    getFeatureValue("GevTimestampTickFrequency", freq);
-    getFeatureValue("GevTimestampValue", ticks);
-    timestamp = static_cast<double>(ticks) / static_cast<double>(freq);
+    // getFeatureValue("GevTimestampTickFrequency", freq);
+    getFeatureValue("TimestampLatchValue", timestamp);
+    // timestamp = static_cast<double>(ticks) / static_cast<double>(freq);
   }
   return timestamp;
 }

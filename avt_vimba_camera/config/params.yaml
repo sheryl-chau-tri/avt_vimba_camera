@@ -5,16 +5,16 @@
 
 /**:
   ros__parameters:
-    feature/AcquisitionFrameCount: 1
-    feature/AcquisitionFrameRateAbs: 10.0
+    # feature/AcquisitionFrameCount: 1
+    # feature/AcquisitionFrameRateAbs: 10.0
     # feature/AcquisitionMode: Continuous
     # feature/ActionDeviceKey: 0
     # feature/ActionGroupKey: 0
     # feature/ActionGroupMask: 0
     # feature/ActionSelector: 0
-    # feature/BalanceRatioAbs: 2.33
+    feature/BalanceRatio: 2.87
     # feature/BalanceRatioSelector: Red
-    # feature/BalanceWhiteAuto: 'Off'
+    feature/BalanceWhiteAuto: 'Off'
     # feature/BalanceWhiteAutoAdjustTol: 5
     # feature/BalanceWhiteAutoRate: 100
     # feature/BandwidthControlMode: StreamBytesPerSecond
@@ -25,7 +25,7 @@
     # feature/ChunkModeActive: false
     # feature/ColorTransformationMode: 'Off'
     # feature/ColorTransformationSelector: RGBtoRGB
-    # feature/ColorTransformationValue: 1.0
+    feature/ColorTransformationValue: 1.0
     # feature/ColorTransformationValueSelector: Gain00
     # feature/DSPSubregionBottom: 1544
     # feature/DSPSubregionLeft: 0
@@ -38,7 +38,7 @@
     # feature/EventNotification: 'Off'
     # feature/EventSelector: AcquisitionStart
     # feature/EventsEnable1: 0
-    # feature/ExposureAuto: 'Off'
+    feature/ExposureAuto: 'Off'
     # feature/ExposureAutoAdjustTol: 5
     # feature/ExposureAutoAlg: Mean
     # feature/ExposureAutoMax: 499997
@@ -47,7 +47,7 @@
     # feature/ExposureAutoRate: 100
     # feature/ExposureAutoTarget: 50
     # feature/ExposureMode: Timed
-    # feature/ExposureTimeAbs: 15005.0
+    feature/ExposureTime: 500.0
     # feature/GVCPCmdRetries: 5
     # feature/GVCPCmdTimeout: 250
     # feature/GVSPBurstSize: 1
@@ -60,7 +60,7 @@
     # feature/GVSPPacketSize: 9014
     # feature/GVSPTiltingSize: 100
     # feature/GVSPTimeout: 70
-    # feature/Gain: 0.0
+    feature/Gain: 10.0
     # feature/GainAuto: 'Off'
     # feature/GainAutoAdjustTol: 5
     # feature/GainAutoMax: 40.0
@@ -93,7 +93,9 @@
     # feature/ReverseY: false
     # feature/Saturation: 1.0
     # feature/StreamBufferHandlingMode: Default
-    # feature/StreamBytesPerSecond: 115000000
+    feature/DeviceLinkThroughputLimitMode: 'On'
+    feature/DeviceLinkThroughputLimit: 625000000
+    feature/GevSCPSPacketSize: 9014
     # feature/StreamFrameRateConstrain: true
     # feature/StreamHoldEnable: 'Off'
     # feature/StrobeDelay: 0
@@ -111,7 +113,8 @@
     # feature/TriggerMode: 'On'
     # feature/TriggerOverlap: 'Off'
     # feature/TriggerSelector: FrameStart
-    feature/TriggerSource: FixedRate
+    # feature/TriggerSource: FixedRate
     # feature/UserSetDefaultSelector: Default
     # feature/UserSetSelector: Default
-    # feature/Width: 2064
+    feature/Width: 1920
+    feature/Height: 1080

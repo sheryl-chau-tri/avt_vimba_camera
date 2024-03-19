@@ -39,12 +39,12 @@
 #include <avt_vimba_camera_msgs/srv/detail/load_settings__struct.hpp>
 #include <avt_vimba_camera_msgs/srv/detail/save_settings__struct.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <geometry_msgs/msg/point_stamped.hpp>
 #include <sensor_msgs/msg/image.hpp>
 #include <sensor_msgs/msg/camera_info.hpp>
 #include <camera_info_manager/camera_info_manager.hpp>
 #include <image_transport/image_transport.hpp>
 #include <std_srvs/srv/trigger.hpp>
-#include <std_msgs/msg/int64.hpp>
 #include <avt_vimba_camera_msgs/srv/load_settings.hpp>
 #include <avt_vimba_camera_msgs/srv/save_settings.hpp>
 
@@ -79,7 +79,7 @@ private:
   rclcpp::Service<avt_vimba_camera_msgs::srv::SaveSettings>::SharedPtr save_srv_;
 
   rclcpp::TimerBase::SharedPtr ptp_data_timer_;
-  std::shared_ptr<rclcpp::Publisher<std_msgs::msg::Int64>> ptp_offset_pub_;
+  std::shared_ptr<rclcpp::Publisher<geometry_msgs::msg::PointStamped>> ptp_offset_pub_;
 
   void loadParams();
   void ptpOffsetCallback();

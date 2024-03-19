@@ -30,11 +30,13 @@
 /// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 /// THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#include <chrono>
 #include <thread>
 
 #include <avt_vimba_camera/mono_camera_node.hpp>
 #include <avt_vimba_camera_msgs/srv/load_settings.hpp>
 #include <avt_vimba_camera_msgs/srv/save_settings.hpp>
+
 
 using namespace std::placeholders;
 
@@ -54,8 +56,8 @@ MonoCameraNode::MonoCameraNode() : Node("camera"), api_(this->get_logger()), cam
   load_srv_ = create_service<avt_vimba_camera_msgs::srv::LoadSettings>("~/load_settings", std::bind(&MonoCameraNode::loadSrvCallback, this, _1, _2, _3));
   save_srv_ = create_service<avt_vimba_camera_msgs::srv::SaveSettings>("~/save_settings", std::bind(&MonoCameraNode::saveSrvCallback, this, _1, _2, _3));
 
-  ptp_data_timer_ = create_wall_timer(std::chrono::seconds(5), std::bind(&avt_vimba_camera::MonoCameraNode::ptpOffsetCallback, this));
-  ptp_offset_pub_ = create_publisher<std_msgs::msg::Int64>("~/ptp_offset", 10);
+  // ptp_data_timer_ = create_wall_timer(std::chrono::seconds(2), std::bind(&avt_vimba_camera::MonoCameraNode::ptpOffsetCallback, this));
+  ptp_offset_pub_ = create_publisher<geometry_msgs::msg::PointStamped>("~/ptp_offset", 10);
   
   loadParams();
 }
@@ -88,7 +90,7 @@ void MonoCameraNode::start()
 
   // Start camera
   cam_.start(ip_, guid_, frame_id_, camera_info_url_);
-  // cam_.startImaging();
+  cam_.startImaging();
 }
 
 void MonoCameraNode::ptpOffsetCallback() {
@@ -97,8 +99,10 @@ void MonoCameraNode::ptpOffsetCallback() {
   // cam_.getFeatureValueInt(cam_, "PtpOffsetFromMaster", ptp_offset);
   if (ptp_offset < 9999999)
   {
-    std_msgs::msg::Int64 offset_msg;
-    offset_msg.data = ptp_offset;
+    rclcpp::Time ros_time = this->get_clock()->now();
+    geometry_msgs::msg::PointStamped offset_msg;
+    offset_msg.header.stamp = ros_time;
+    offset_msg.point.x = static_cast<double>(ptp_offset);
     ptp_offset_pub_->publish(offset_msg);
   }
 }
@@ -120,7 +124,16 @@ void MonoCameraNode::frameCallback(const FramePtr& vimba_frame_ptr)
       {
         VmbUint64_t frame_timestamp;
         vimba_frame_ptr->GetTimestamp(frame_timestamp);
-        ci.header.stamp = rclcpp::Time(cam_.getTimestampRealTime(frame_timestamp)) + rclcpp::Duration(ptp_offset_, 0);
+        auto frame_timestamp_offset = frame_timestamp - 37000000000;
+        auto now = std::chrono::system_clock::now();
+        auto duration = now.time_since_epoch();
+        auto value = std::chrono::duration_cast<std::chrono::nanoseconds>(duration).count();
+        // std::cout << "frame: " << frame_timestamp_offset << " diff from system: " << value - frame_timestamp_offset << std::endl;
+        geometry_msgs::msg::PointStamped offset_msg;
+        offset_msg.header.stamp = ros_time;
+        offset_msg.point.y = static_cast<double>(value - frame_timestamp_offset);
+        ptp_offset_pub_->publish(offset_msg);
+        // ci.header.stamp = rclcpp::Time(cam_.getTimestampRealTime(frame_timestamp)) + rclcpp::Duration(ptp_offset_, 0);
       }
       else
       {
